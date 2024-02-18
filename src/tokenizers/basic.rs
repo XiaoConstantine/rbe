@@ -36,6 +36,10 @@ impl Tokenizer {
             }
         }
     }
+
+    pub fn find_most_frequent_pair(&self, stats: &HashMap<(u32, u32), u32>) -> Option<(u32, u32)> {
+        stats.iter().max_by_key(|&(_, &count)| count).map(|(&pair, _)| pair)
+    }
 }
 
 impl TokenizerTrait for Tokenizer {
@@ -47,22 +51,25 @@ impl TokenizerTrait for Tokenizer {
 
         for i in 0..num_merges {
             let stats = get_stats(&ids);
-            let pair = *stats.iter().max_by_key(|&(_, &count)| count).unwrap().0;
-            let idx = 256 + i as u32;
-            ids = merge(ids, pair, idx);
-            self.merges.insert(pair, idx);
-            let new_token = [self.vocab[&pair.0].clone(), self.vocab[&pair.1].clone()].concat();
-            self.vocab.insert(idx, new_token);
-
-            if verbose {
-                println!(
-                    "merge {}/{}: {:?} -> {} had {} occurances",
-                    i + 1,
-                    num_merges,
-                    pair,
+            if let Some(pair) = self.find_most_frequent_pair(&stats) {
+                let idx = 256 + i as u32;
+                ids = merge(ids, pair, idx);
+                self.merges.insert(pair, idx);
+                self.vocab.insert(
                     idx,
-                    stats[&pair]
+                    [self.vocab[&pair.0].clone(), self.vocab[&pair.1].clone()].concat(),
                 );
+
+                if verbose {
+                    println!(
+                        "merge {}/{}: {:?} -> {} had {} occurances",
+                        i + 1,
+                        num_merges,
+                        pair,
+                        idx,
+                        stats[&pair]
+                    );
+                }
             }
         }
     }
@@ -72,16 +79,17 @@ impl TokenizerTrait for Tokenizer {
         let mut ids: Vec<u32> = text_bytes.iter().map(|&b| b as u32).collect();
         while ids.len() >= 2 {
             let stats = get_stats(&ids);
-            let pair = stats
-                .iter()
-                .min_by_key(|&(&pair, _)| self.merges.get(&pair).unwrap_or(&u32::MAX))
-                .map(|(&pair, _)| pair)
-                .unwrap();
-            if !self.merges.contains_key(&pair) {
+            if let Some((&pair, _)) =
+                stats.iter().min_by_key(|&(&pair, _)| self.merges.get(&pair).unwrap_or(&u32::MAX))
+            {
+                if let Some(&idx) = self.merges.get(&pair) {
+                    ids = merge(ids, pair, idx);
+                } else {
+                    break;
+                }
+            } else {
                 break;
             }
-            let idx = *self.merges.get(&pair).unwrap();
-            ids = merge(ids, pair, idx);
         }
         ids
     }
@@ -107,8 +115,6 @@ impl TokenizerTrait for Tokenizer {
 
         let mut vocab_file = File::create(vocab_file_path)?;
         for (&idx, token) in &self.vocab {
-            // Handling of rendering tokens would go here
-            // This example skips over complex Unicode handling for brevity
             let token_string = render_token(token);
             writeln!(vocab_file, "{} [{}]", idx, token_string)?;
         }

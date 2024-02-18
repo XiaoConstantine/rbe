@@ -39,3 +39,71 @@ pub fn render_token(token: &[u8]) -> String {
     }
     result
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::{get_stats, merge, render_token, replace_control_characters};
+
+    #[test]
+    fn test_get_stats() {
+        let ids = vec![1, 2, 1, 2, 3, 1, 2];
+        let stats = get_stats(&ids);
+        assert_eq!(stats.get(&(1, 2)), Some(&3)); // Appears 3 times
+        assert_eq!(stats.get(&(2, 1)), Some(&1)); // Appears 1 time
+        assert_eq!(stats.get(&(2, 3)), Some(&1)); // Appears 1 time
+        assert_eq!(stats.get(&(3, 1)), Some(&1)); // Appears 1 time
+        assert_eq!(stats.len(), 4); // Only 4 unique pairs
+    }
+
+    #[test]
+    fn test_merge() {
+        let ids = vec![1, 2, 1, 2, 3, 1, 2];
+        let pair = (1, 2);
+        let new_id = 256;
+        let merged_ids = merge(ids, pair, new_id);
+        assert_eq!(merged_ids, vec![256, 256, 3, 256]); // Pair (1, 2) replaced by 256
+    }
+
+    #[test]
+    fn test_replace_control_characters() {
+        // Test with a string containing control characters
+        let input = "\u{0007}Hello, \u{0009}world!\u{000A}";
+        let expected = "\\u0007Hello, \\u0009world!\\u000a";
+        assert_eq!(replace_control_characters(input), expected);
+
+        // Test with a string without control characters
+        let input = "Hello, world!";
+        let expected = "Hello, world!";
+        assert_eq!(replace_control_characters(input), expected);
+
+        // Test with an empty string
+        let input = "";
+        let expected = "";
+        assert_eq!(replace_control_characters(input), expected);
+
+        // Test with a string containing only control characters
+        let input = "\u{0000}\u{001F}";
+        let expected = "\\u0000\\u001f";
+        assert_eq!(replace_control_characters(input), expected);
+    }
+
+    #[test]
+    fn test_render_token() {
+        // Test with control characters
+        let token = &[0x00, 0x1F, 0x20, 0x7F];
+        assert_eq!(render_token(token), "\\x00\\x1f \\x7f");
+
+        // Test with ASCII characters
+        let token = b"Hello, world!";
+        assert_eq!(render_token(token), "Hello, world!");
+
+        // Test with a mix of control and ASCII characters
+        let token = &[0x00, b'H', b'e', b'l', b'l', b'o', 0x7F];
+        assert_eq!(render_token(token), "\\x00Hello\\x7f");
+
+        // Test with an empty slice
+        let token: &[u8] = &[];
+        assert_eq!(render_token(token), "");
+    }
+}
