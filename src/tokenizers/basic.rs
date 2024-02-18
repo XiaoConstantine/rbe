@@ -138,9 +138,7 @@ mod tests {
         tokenizer.save(file_prefix.to_str().unwrap()).unwrap();
 
         let mut load_tokenizer = Tokenizer::new();
-        load_tokenizer
-            .load(file_prefix.with_extension("model").to_str().unwrap())
-            .unwrap();
+        load_tokenizer.load(file_prefix.with_extension("model").to_str().unwrap()).unwrap();
         assert_eq!(load_tokenizer.merges, tokenizer.merges);
         assert_eq!(load_tokenizer.pattern, tokenizer.pattern);
 

@@ -25,13 +25,7 @@ pub fn merge(ids: Vec<u32>, pair: (u32, u32), idx: u32) -> Vec<u32> {
 
 pub fn replace_control_characters(s: &str) -> String {
     s.chars()
-        .map(|ch| {
-            if ch.is_control() {
-                format!("\\u{:04x}", ch as u32)
-            } else {
-                ch.to_string()
-            }
-        })
+        .map(|ch| if ch.is_control() { format!("\\u{:04x}", ch as u32) } else { ch.to_string() })
         .collect()
 }
 
