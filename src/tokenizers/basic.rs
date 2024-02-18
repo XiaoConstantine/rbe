@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader, Write};
 
-use crate::util::render_token;
+use crate::util::{get_stats, merge, render_token};
 use crate::TokenizerTrait;
 
 struct Tokenizer {
@@ -40,15 +40,59 @@ impl Tokenizer {
 
 impl TokenizerTrait for Tokenizer {
     fn train(&mut self, text: &str, vocab_size: u32, verbose: bool) {
-        unimplemented!()
+        assert!(vocab_size >= 256);
+        let num_merges = vocab_size - 256;
+        let text_bytes = text.as_bytes();
+        let mut ids: Vec<u32> = text_bytes.iter().map(|&b| b as u32).collect();
+
+        for i in 0..num_merges {
+            let stats = get_stats(&ids);
+            let pair = *stats.iter().max_by_key(|&(_, &count)| count).unwrap().0;
+            let idx = 256 + i as u32;
+            ids = merge(ids, pair, idx);
+            self.merges.insert(pair, idx);
+            let new_token = [self.vocab[&pair.0].clone(), self.vocab[&pair.1].clone()].concat();
+            self.vocab.insert(idx, new_token);
+
+            if verbose {
+                println!(
+                    "merge {}/{}: {:?} -> {} had {} occurances",
+                    i + 1,
+                    num_merges,
+                    pair,
+                    idx,
+                    stats[&pair]
+                );
+            }
+        }
     }
 
     fn encode(&self, text: &str) -> Vec<u32> {
-        unimplemented!()
+        let text_bytes = text.as_bytes();
+        let mut ids: Vec<u32> = text_bytes.iter().map(|&b| b as u32).collect();
+        while ids.len() >= 2 {
+            let stats = get_stats(&ids);
+            let pair = stats
+                .iter()
+                .min_by_key(|&(&pair, _)| self.merges.get(&pair).unwrap_or(&u32::MAX))
+                .map(|(&pair, _)| pair)
+                .unwrap();
+            if !self.merges.contains_key(&pair) {
+                break;
+            }
+            let idx = *self.merges.get(&pair).unwrap();
+            ids = merge(ids, pair, idx);
+        }
+        ids
     }
 
     fn decode(&self, ids: &[u32]) -> String {
-        unimplemented!()
+        let text_bytes: Vec<u8> = ids
+            .iter()
+            .filter_map(|&id| self.vocab.get(&id))
+            .flat_map(|bytes| bytes.iter().cloned())
+            .collect();
+        String::from_utf8(text_bytes).unwrap_or_else(|e| format!("Error decoding text: {:?}", e))
     }
 
     fn save(&self, file_prefix: &str) -> io::Result<()> {
@@ -143,5 +187,16 @@ mod tests {
         assert_eq!(load_tokenizer.pattern, tokenizer.pattern);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_encode_decode() {
+        let test_strings = ["", "?", "hello world!!!? (안녕하세요!) lol123 😉"];
+        let tokenizer = Tokenizer::new();
+        for test_string in test_strings {
+            let ids = tokenizer.encode(test_string);
+            let decoded = tokenizer.decode(&ids);
+            assert_eq!(test_string, decoded);
+        }
     }
 }
