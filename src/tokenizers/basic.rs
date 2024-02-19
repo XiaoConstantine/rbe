@@ -5,10 +5,10 @@ use std::io::{self, BufRead, BufReader, Write};
 use crate::util::{get_stats, merge, render_token};
 use crate::TokenizerTrait;
 
-struct Tokenizer {
-    merges: HashMap<(u32, u32), u32>,
-    vocab: HashMap<u32, Vec<u8>>,
-    pattern: String,
+pub struct Tokenizer {
+    pub merges: HashMap<(u32, u32), u32>,
+    pub vocab: HashMap<u32, Vec<u8>>,
+    pub pattern: String,
 }
 
 impl Tokenizer {
@@ -109,7 +109,7 @@ impl TokenizerTrait for Tokenizer {
 
         let mut model_file = File::create(model_file_path)?;
         writeln!(model_file, "{}", self.pattern)?;
-        for (&(idx1, idx2), &idx) in &self.merges {
+        for (&(idx1, idx2), _) in &self.merges {
             writeln!(model_file, "{} {}", idx1, idx2)?;
         }
 
@@ -155,7 +155,7 @@ impl TokenizerTrait for Tokenizer {
 mod tests {
 
     use super::*;
-    use tempfile::{tempdir, TempDir};
+    use tempfile::tempdir;
 
     fn create_temp_tokenizer() -> Tokenizer {
         let mut tokenizer = Tokenizer::new();
