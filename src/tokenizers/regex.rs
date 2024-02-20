@@ -10,7 +10,7 @@ use regex::Regex;
 
 const GPT4_SPLIT_PATTERN: &str = r#"'(?i:[sdmt]|ll|ve|re)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]|\s+"#;
 
-struct RegexTokenizer {
+pub struct RegexTokenizer {
     tokenizer: Tokenizer,
     compiled_pattern: Regex,
 }
