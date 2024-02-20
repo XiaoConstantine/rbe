@@ -6,10 +6,9 @@ use std::time::Instant;
 use std::{env, fs, io};
 
 use clap::{App, Arg};
-use rbpe::TokenizerTrait;
 use rbpe::tokenizers::basic::Tokenizer;
 use rbpe::tokenizers::regex::RegexTokenizer;
-
+use rbpe::TokenizerTrait;
 
 fn read_file_content(path: &Path) -> io::Result<String> {
     let mut file = File::open(path)?;
@@ -18,13 +17,15 @@ fn read_file_content(path: &Path) -> io::Result<String> {
     Ok(contents)
 }
 
-fn main() -> std::io::Result<()>{
+fn main() -> std::io::Result<()> {
     let matches = App::new("CLI for tokenizer")
-        .arg(Arg::with_name("tokenizer")
-            .long("tokenizer")
-            .value_name("TOKENIZER")
-            .help("Choose a tokenizer for processing (e.g. basic, regex)")
-            .takes_value(true))
+        .arg(
+            Arg::with_name("tokenizer")
+                .long("tokenizer")
+                .value_name("TOKENIZER")
+                .help("Choose a tokenizer for processing (e.g. basic, regex)")
+                .takes_value(true),
+        )
         .get_matches();
 
     let choices = matches.value_of("tokenizer").unwrap_or("regex");
