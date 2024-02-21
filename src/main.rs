@@ -1,9 +1,8 @@
-use std::error::Error;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::time::Instant;
-use std::{env, fs, io};
+use std::{fs, io};
 
 use clap::{App, Arg};
 use rbpe::tokenizers::basic::Tokenizer;
@@ -35,18 +34,23 @@ fn main() -> std::io::Result<()> {
         "regex" => Box::new(RegexTokenizer::new()),
         _ => Box::new(RegexTokenizer::new()),
     };
-    let training_input_path = "/data/taylorswift.txt";
+    let training_input_path = "data/taylorswift.txt";
     let content = read_file_content(Path::new(training_input_path))?;
     fs::create_dir_all("models")?;
 
     // Time the performance
     let start = Instant::now();
-    // let file_prefix = Path::new("models").join(choices).to_str();
-    tokenizer.train(&content, 512, false);
-    // match file_prefix {
-    //     Some(file_str) => tokenizer.save(file_str),
-    //     None =>Ok("invliad")
-    // }
+    let file_prefix = Path::new("models").join(choices);
+
+    tokenizer.train(&content, 512, true);
+    if let Some(file_prefix_str) = file_prefix.to_str() {
+        tokenizer.save(file_prefix_str)?;
+    } else {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Path contain invalid utf-8 characters",
+        ));
+    }
     let duration = start.elapsed();
     println!("Took {:.2}", duration.as_secs_f32());
     Ok(())

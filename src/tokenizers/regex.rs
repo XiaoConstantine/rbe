@@ -63,18 +63,25 @@ impl TokenizerTrait for RegexTokenizer {
                 let new_id = 256 + i as u32;
                 ids = ids.into_iter().map(|chunk_ids| merge(chunk_ids, pair, new_id)).collect();
                 self.tokenizer.merges.insert(pair, new_id);
-                let first_part = self.tokenizer.vocab.get(&pair.0).unwrap_or(&vec![]).clone();
-                let second_part = self.tokenizer.vocab.get(&pair.1).unwrap_or(&vec![]).clone();
-                self.tokenizer.vocab.insert(new_id, [first_part, second_part].concat());
+                let concatenated_parts = [
+                    self.tokenizer.vocab.get(&pair.0).unwrap_or(&vec![]).as_slice(),
+                    self.tokenizer.vocab.get(&pair.1).unwrap_or(&vec![]).as_slice(),
+                ]
+                .iter()
+                .flat_map(|&slice| slice.iter().copied())
+                .collect::<Vec<u8>>();
+                self.tokenizer.vocab.insert(new_id, concatenated_parts.clone());
 
                 if verbose {
                     println!(
-                        "merge {}/{}: {:?} -> {} had {} occurrences",
+                        "merge {}/{}: {:?} -> {} ({:?}) had {} occurrences",
                         i + 1,
                         vocab_size - 256,
                         pair,
                         new_id,
-                        stats[&pair]
+                        String::from_utf8(concatenated_parts)
+                            .unwrap_or_else(|_| "Invalid UTF-8".to_string()),
+                        stats[&pair],
                     );
                 }
             } else {

@@ -62,11 +62,15 @@ impl TokenizerTrait for Tokenizer {
 
                 if verbose {
                     println!(
-                        "merge {}/{}: {:?} -> {} had {} occurances",
+                        "merge {}/{}: {:?} -> {} ({:?}) had {} occurances",
                         i + 1,
                         num_merges,
                         pair,
                         idx,
+                        String::from_utf8(
+                            [self.vocab[&pair.0].clone(), self.vocab[&pair.1].clone()].concat()
+                        )
+                        .unwrap_or_else(|_| "Invalid utf-8".to_string()),
                         stats[&pair]
                     );
                 }
