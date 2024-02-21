@@ -4,3 +4,24 @@ Mini bpe in Rust
 
 
 Port [minbpe](https://github.com/karpathy/minbpe) to rust as learning process
+
+Benchmark
+---------
+**Build binary**
+
+```bash
+cargo build --release
+
+```
+
+**Run tokenizer**
+
+```bash
+./target/release/rbpe --tokenizer {basic, regex}
+```
+
+**Results**
+
+On my m1 book, I got:
+Basic: 0.4s
+Regex: 1.23s
