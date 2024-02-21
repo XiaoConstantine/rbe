@@ -24,7 +24,7 @@ cargo build --release
 
 On my m1 book, I got:
 
-| Mode | Time  |
-|---------|-------|
-| Basic   | 0.4s  |
-| Regex   | 1.23s |
+| Mode | Time (rust)  |Time (python) |
+|---------|-------|-|
+| Basic   | 0.4s  |5.65s |
+| Regex   | 1.23s |9.01s |
