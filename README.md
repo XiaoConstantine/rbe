@@ -23,5 +23,8 @@ cargo build --release
 **Results**
 
 On my m1 book, I got:
-Basic: 0.4s
-Regex: 1.23s
+
+| Mode | Time  |
+|---------|-------|
+| Basic   | 0.4s  |
+| Regex   | 1.23s |
