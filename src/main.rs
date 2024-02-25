@@ -1,3 +1,40 @@
+//! This is the main file of the RBPE (Rule-Based Preprocessor Engine) CLI application.
+//!
+//! The application reads the content of a file, trains a tokenizer based on the chosen algorithm,
+//! and saves the trained tokenizer model to a file.
+//!
+//! The CLI accepts a command-line argument `--tokenizer` to specify the tokenizer algorithm.
+//! The available choices are "basic" and "regex". If no choice is provided, the default tokenizer
+//! algorithm is "regex".
+//!
+//! The application measures the performance of the training process using the `Instant` struct
+//! from the `std::time` module.
+//!
+//! # Example
+//!
+//! ```shell
+//! $ cargo run -- --tokenizer basic
+//! ```
+//!
+//! This will train the tokenizer using the basic algorithm and save the model to the "models/basic" file.
+//!
+//! # Dependencies
+//!
+//! This application depends on the following external crates:
+//!
+//! - `clap` for command-line argument parsing
+//! - `rbpe` for the tokenizer implementation
+//!
+//! # Usage
+//!
+//! To run the application, use the following command:
+//!
+//! ```shell
+//! $ cargo run -- [OPTIONS]
+//! ```
+//!
+//! Replace `[OPTIONS]` with the desired command-line options.
+//!
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
