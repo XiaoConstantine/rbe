@@ -102,7 +102,6 @@ pub fn render_token(token: &[u8]) -> String {
     }
     result
 }
-use std::collections::HashMap;
 
 #[cfg(test)]
 mod tests {
